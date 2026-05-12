@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Dashboard Automático</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+
+  <style>
+
+    body{
+      background:#111;
+      color:white;
+      font-family:Arial;
+      padding:20px;
+    }
+
+    h1{
+      margin-bottom:20px;
+    }
+
+    .card{
+      background:#1e1e1e;
+      padding:15px;
+      margin-bottom:10px;
+      border-radius:10px;
+    }
+
+  </style>
+
+</head>
+
+<body>
+
+<h1>Dashboard Automático</h1>
+
+<div id="employees"></div>
+
+<script>
+
+const sheetURL =
+"https://docs.google.com/spreadsheets/d/e/2PACX-1vRd96zedAF81-2ukGaP0bzCEKVTpyTUhURu7WqGX54RXPz4fo2qCtnGuxtygoYR6u4_vf7ULOsBU-fk/pub?gid=499358020&single=true&output=csv";
+
+Papa.parse(sheetURL, {
+
+    download:true,
+    header:true,
+
+    complete:function(results){
+
+        const data = results.data;
+
+        const container =
+        document.getElementById("employees");
+
+        data.forEach(person => {
+
+            if(!person.Nombre) return;
+
+            const card =
+            document.createElement("div");
+
+            card.className = "card";
+
+            card.innerHTML = `
+                <h2>${person.Nombre}</h2>
+                <p>Área: ${person.Area}</p>
+                <p>Promedio: ${person.Promedio}</p>
+            `;
+
+            container.appendChild(card);
+
+        });
+
+    }
+
+});
+
+</script>
+
+</body>
+</html>
