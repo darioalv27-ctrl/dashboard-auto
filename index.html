@@ -126,17 +126,22 @@ rows.forEach(row => {
         .replace(",", ".")
     ) || 0;
 
-    if(!grouped[name]){
-
-        grouped[name] = {
-            total:0,
-            max:0
-        };
+    grouped[name] = {
+    total:0,
+    max:0,
+    correct:0,
+    wrong:0
+};
 
     }
 
     grouped[name].total += obtained;
     grouped[name].max += maximum;
+    if(obtained >= maximum){
+    grouped[name].correct += 1;
+}else{
+    grouped[name].wrong += 1;
+}
 
 });
 
@@ -159,9 +164,11 @@ for(const name in grouped){
     ((total/max)*100).toFixed(1);
 
     people.push({
-        name,
-        percentage
-    });
+    name,
+    percentage,
+    correct: grouped[name].correct,
+    wrong: grouped[name].wrong
+});
 
 }
 
@@ -202,10 +209,16 @@ people.forEach((person,index)=>{
     card.className = "card";
 
     card.innerHTML = `
-        <h2>#${index + 1} ${person.name}</h2>
-        <p class="score">
-            ${person.percentage}%
-        </p>
+    <h2>#${index + 1} ${person.name}</h2>
+
+    <p class="score">
+        ${person.percentage}%
+    </p>
+
+    <p>✅ Buenas: ${person.correct}</p>
+
+    <p>❌ Malas: ${person.wrong}</p>
+`;
     `;
 
     ranking.appendChild(card);
