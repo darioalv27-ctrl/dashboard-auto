@@ -3,41 +3,94 @@
 
 <head>
 
-  <meta charset="UTF-8">
+<meta charset="UTF-8">
 
-  <title>Dashboard Automático</title>
+<title>Dashboard Coctelería</title>
 
-  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 
-  <style>
+<style>
 
-    body{
-      background:#111;
-      color:white;
-      font-family:Arial;
-      padding:20px;
-    }
+body{
+    background:#111;
+    color:white;
+    font-family:Arial;
+    padding:20px;
+}
 
-    h1{
-      margin-bottom:20px;
-    }
+h1{
+    margin-bottom:30px;
+}
 
-    .card{
-      background:#1e1e1e;
-      padding:15px;
-      margin-bottom:10px;
-      border-radius:10px;
-    }
+.kpis{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:15px;
+    margin-bottom:30px;
+}
 
-  </style>
+.kpi{
+    background:#1e1e1e;
+    padding:20px;
+    border-radius:12px;
+    text-align:center;
+}
+
+.kpi h2{
+    font-size:30px;
+    margin:10px 0;
+}
+
+.cards{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
+    gap:15px;
+}
+
+.card{
+    background:#1e1e1e;
+    padding:20px;
+    border-radius:12px;
+}
+
+.score{
+    font-size:28px;
+    font-weight:bold;
+}
+
+</style>
 
 </head>
 
 <body>
 
-<h1>Dashboard Automático</h1>
+<h1>Dashboard Evaluación Coctelería</h1>
 
-<div id="employees"></div>
+<div class="kpis">
+
+<div class="kpi">
+<p>Total Evaluados</p>
+<h2 id="totalEmployees">0</h2>
+</div>
+
+<div class="kpi">
+<p>Promedio General</p>
+<h2 id="globalAverage">0%</h2>
+</div>
+
+<div class="kpi">
+<p>Mejor Resultado</p>
+<h2 id="bestScore">0%</h2>
+</div>
+
+<div class="kpi">
+<p>Top Performer</p>
+<h2 id="topName">-</h2>
+</div>
+
+</div>
+
+<div class="cards" id="ranking"></div>
 
 <script>
 
@@ -46,42 +99,120 @@ const sheetURL =
 
 Papa.parse(sheetURL, {
 
-  download:true,
-  header:true,
+download:true,
+header:true,
 
-  complete:function(results){
+complete:function(results){
 
-    const data = results.data;
+const rows = results.data;
 
-    const container =
-    document.getElementById("employees");
+const grouped = {};
 
-    container.innerHTML = "";
+rows.forEach(row => {
 
-    data.forEach(person => {
+    if(!row.NOMBRE) return;
 
-      if(!person.NOMBRE) return;
+    const name = row.NOMBRE;
 
-      const card =
-      document.createElement("div");
+    const obtained =
+    parseFloat(
+        String(row["PUNTAJE OBTENIDO"])
+        .replace(",", ".")
+    ) || 0;
 
-      card.className = "card";
+    const maximum =
+    parseFloat(
+        String(row["PUNTAJE MAXIMO"])
+        .replace(",", ".")
+    ) || 0;
 
-      card.innerHTML = `
-        <h2>${person.NOMBRE}</h2>
-        <p>Bloque: ${person.BLOQUE}</p>
-        <p>Pregunta: ${person.PREGUNTA}</p>
-        <p>Respuesta: ${person.RESPUESTA}</p>
-        <p>Puntaje: ${person["PUNTAJE OBTENIDO"]}</p>
-        <p>Correcta: ${person.CORRECTA}</p>
-        
-      `;
+    if(!grouped[name]){
 
-      container.appendChild(card);
+        grouped[name] = {
+            total:0,
+            max:0
+        };
 
+    }
+
+    grouped[name].total += obtained;
+    grouped[name].max += maximum;
+
+});
+
+const ranking =
+document.getElementById("ranking");
+
+ranking.innerHTML = "";
+
+const people = [];
+
+for(const name in grouped){
+
+    const total =
+    grouped[name].total;
+
+    const max =
+    grouped[name].max;
+
+    const percentage =
+    ((total/max)*100).toFixed(1);
+
+    people.push({
+        name,
+        percentage
     });
 
-  }
+}
+
+people.sort((a,b)=>
+b.percentage - a.percentage
+);
+
+document.getElementById(
+"totalEmployees"
+).innerText = people.length;
+
+const global =
+people.reduce(
+(a,b)=>a + parseFloat(b.percentage),
+0
+) / people.length;
+
+document.getElementById(
+"globalAverage"
+).innerText =
+global.toFixed(1) + "%";
+
+document.getElementById(
+"bestScore"
+).innerText =
+people[0].percentage + "%";
+
+document.getElementById(
+"topName"
+).innerText =
+people[0].name;
+
+people.forEach((person,index)=>{
+
+    const card =
+    document.createElement("div");
+
+    card.className = "card";
+
+    card.innerHTML = `
+        <h2>#${index + 1} ${person.name}</h2>
+        <p class="score">
+            ${person.percentage}%
+        </p>
+    `;
+
+    ranking.appendChild(card);
+
+});
+
+}
 
 });
 
